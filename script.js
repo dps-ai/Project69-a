@@ -1,56 +1,63 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+const registerForm = document.getElementById('registerForm');
+const registrationDiv = document.getElementById('registration');
+const swipeDiv = document.getElementById('swipe');
+const profileName = document.getElementById('profileName');
+const profileBio = document.getElementById('profileBio');
+const likeBtn = document.getElementById('like');
+const dislikeBtn = document.getElementById('dislike');
+
+let students = JSON.parse(localStorage.getItem('students')) || [];
+let currentUser = null;
+let potentialMatches = [];
+let currentIndex = 0;
+
+registerForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('name').value.trim();
+  const age = parseInt(document.getElementById('age').value);
+  const gender = document.getElementById('gender').value;
+  const bio = document.getElementById('bio').value.trim();
+
+  if (age >= 18) {
+    alert('You must be under 18 to register.');
+    return;
+  }
+
+  currentUser = { name, age, gender, bio };
+  students.push(currentUser);
+  localStorage.setItem('students', JSON.stringify(students));
+
+  registrationDiv.classList.add('hidden');
+  swipeDiv.classList.remove('hidden');
+
+  findMatches();
+  showProfile();
+});
+
+function findMatches() {
+  potentialMatches = students.filter(s => s.gender !== currentUser.gender && s.name !== currentUser.name);
 }
 
-.container {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 300px;
-  text-align: center;
+function showProfile() {
+  if (currentIndex < potentialMatches.length) {
+    const profile = potentialMatches[currentIndex];
+    profileName.textContent = profile.name;
+    profileBio.textContent = profile.bio;
+  } else {
+    profileName.textContent = 'No more matches!';
+    profileBio.textContent = '';
+    likeBtn.disabled = true;
+    dislikeBtn.disabled = true;
+  }
 }
 
-input, select, textarea, button {
-  width: 100%;
-  margin: 10px 0;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-}
+likeBtn.addEventListener('click', () => {
+  currentIndex++;
+  showProfile();
+});
 
-button {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-.hidden {
-  display: none;
-}
-
-#profileCard {
-  margin: 20px 0;
-  padding: 20px;
-  background: #e0f7fa;
-  border-radius: 10px;
-}
-
-.buttons button {
-  width: 45%;
-  margin: 5px;
-  font-size: 24px;
-}
+dislikeBtn.addEventListener('click', () => {
+  currentIndex++;
+  showProfile();
+});
