@@ -1,81 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DPS Dating</title>
-  <link rel="stylesheet" href="style.css" />
-  <!-- Firebase App (core) -->
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
-<!-- Firestore -->
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"></script>
-<script>
-    const firebaseConfig = {
-    apiKey: "AIzaSyCAiAvwW43vkEgZ9P31-mCvEO8G0qEXHl0",
-    authDomain: "project-69a.firebaseapp.com",
-    projectId: "project-69a",
-    storageBucket: "project-69a.firebasestorage.app",
-    messagingSenderId: "825319935608",
-    appId: "1:825319935608:web:64c1fa9dad17d3bb4b678d",
-    measurementId: "G-X5B7459LRE"
-    };
-  
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const analytics = getAnalytics(app);
-  </script>
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dating App</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>DPS Dating App</h1>
-
-  <div id="registration">
-    <h2>Register</h2>
-    <input type="text" id="name" placeholder="Name" />
-    <input type="number" id="age" placeholder="Age" />
-    <input type="text" id="school" placeholder="School" />
-    <select id="gender">
-      <option value="male">Male</option>
-      <option value="female">Female</option>
-    </select>
-    <textarea id="description" placeholder="Short Description"></textarea>
-    <button onclick="registerUser()">Register</button>
+  <div id="login">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" required><br>
+      <input type="password" id="loginPassword" placeholder="Password" required><br>
+      <button type="submit">Log In</button>
+    </form>
   </div>
 
-  <div id="swipe-container" class="hidden">
-    <h2>Swipe Profiles</h2>
-    <div id="card-container"></div>
-    <div id="actions">
-      <button onclick="swipe('left')">👎 Swipe Left</button>
-      <button onclick="swipe('right')">👍 Swipe Right</button>
+  <div id="registration" class="hidden">
+    <h2>Register</h2>
+    <form id="registerForm">
+      <input type="text" id="regName" placeholder="Full Name" required><br>
+      <input type="number" id="regAge" placeholder="Age" required><br>
+      <select id="regGender" required>
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select><br>
+      <textarea id="regBio" placeholder="Short Bio" required></textarea><br>
+      <input type="email" id="regEmail" placeholder="Email" required><br>
+      <input type="password" id="regPassword" placeholder="Password" required><br>
+      <button type="submit">Register</button>
+    </form>
+  </div>
+
+  <div id="swipe" class="hidden">
+    <h2>Find Your Match</h2>
+    <div id="profile">
+      <h3 id="profileName"></h3>
+      <p id="profileBio"></p>
+    </div>
+    <div class="actions">
+      <button id="dislike">Dislike</button>
+      <button id="like">Like</button>
     </div>
   </div>
 
-  <div id="matches" class="hidden">
-    <h2>Matched Users</h2>
-    <ul id="match-list"></ul>
-  </div>
-
-  <script src="script.js"></script>
-  <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDL8FhpPFa0t1-KJOjuNTnofWx3RPa7o5w",
-    authDomain: "project-69a-94256.firebaseapp.com",
-    projectId: "project-69a-94256",
-    storageBucket: "project-69a-94256.firebasestorage.app",
-    messagingSenderId: "919510070169",
-    appId: "1:919510070169:web:912ad13e2e79de90339908"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-</script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
