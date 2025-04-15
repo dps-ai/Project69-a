@@ -1,137 +1,131 @@
-// Initialize Firebase (this should already be in your index.html)
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// Firebase config & initialization
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDL8FhpPFa0t1-KJOjuNTnofWx3RPa7o5w",
+  authDomain: "project-69a-94256.firebaseapp.com",
+  projectId: "project-69a-94256",
+  storageBucket: "project-69a-94256.firebasestorage.app",
+  messagingSenderId: "919510070169",
+  appId: "1:919510070169:web:912ad13e2e79de90339908"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore(app);
+
+// Elements
+const registerForm = document.getElementById('registerForm');
+const loginForm = document.getElementById('loginForm');
+const registrationDiv = document.getElementById('registration');
+const loginDiv = document.getElementById('login');
+const swipeDiv = document.getElementById('swipe');
+const profileName = document.getElementById('profileName');
+const profileBio = document.getElementById('profileBio');
+const likeBtn = document.getElementById('like');
+const dislikeBtn = document.getElementById('dislike');
 
 let currentUser = null;
+let potentialMatches = [];
 let currentIndex = 0;
 
-function registerUser() {
-  const name = document.getElementById("name").value.trim();
-  const age = parseInt(document.getElementById("age").value);
-  const school = document.getElementById("school").value.trim();
-  const gender = document.getElementById("gender").value;
-  const description = document.getElementById("description").value.trim();
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-  if (!name || !age || !school || !description) {
-    alert("Please fill in all fields.");
+  const name = document.getElementById('regName').value.trim();
+  const age = parseInt(document.getElementById('regAge').value);
+  const gender = document.getElementById('regGender').value;
+  const bio = document.getElementById('regBio').value.trim();
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+
+  if (age >= 18) {
+    alert('You must be under 18 to register.');
     return;
   }
 
-  if (age > 18) {
-    alert("You must be 18 or younger.");
-    return;
-  }
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = userCredential.user.uid;
 
-  if (school.toLowerCase() !== "delhi public school") {
-    alert("Only students of Delhi Public School can register.");
-    return;
-  }
-
-  // Add user to Firestore
-  db.collection("users").add({
-    name,
-    age,
-    school,
-    gender,
-    description,
-    likes: [],
-    matches: []
-  }).then((docRef) => {
-    currentUser = {
-      id: docRef.id,
+    await setDoc(doc(db, 'students', uid), {
       name,
       age,
-      school,
       gender,
-      description,
-      likes: [],
-      matches: []
-    };
+      bio,
+      email
+    });
 
-    document.getElementById("registration").classList.add("hidden");
-    document.getElementById("swipe-container").classList.remove("hidden");
-    document.getElementById("matches").classList.remove("hidden");
+    currentUser = { uid, name, age, gender, bio, email };
+    registrationDiv.classList.add('hidden');
+    loadMatches();
+  } catch (error) {
+    alert(error.message);
+  }
+});
 
-    loadSwipeCards();
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const uid = userCredential.user.uid;
+    const snapshot = await getDocs(collection(db, 'students'));
+    snapshot.forEach(docSnap => {
+      if (docSnap.id === uid) {
+        currentUser = { uid, ...docSnap.data() };
+      }
+    });
+
+    loginDiv.classList.add('hidden');
+    loadMatches();
+  } catch (error) {
+    alert(error.message);
+  }
+});
+
+function loadMatches() {
+  getDocs(collection(db, 'students')).then(snapshot => {
+    potentialMatches = [];
+    snapshot.forEach(docSnap => {
+      const user = docSnap.data();
+      if (
+        docSnap.id !== currentUser.uid &&
+        user.gender !== currentUser.gender &&
+        user.age < 18
+      ) {
+        potentialMatches.push(user);
+      }
+    });
+    swipeDiv.classList.remove('hidden');
+    showProfile();
   });
 }
 
-function loadSwipeCards() {
-  const oppositeGender = currentUser.gender === "male" ? "female" : "male";
-
-  db.collection("users")
-    .where("gender", "==", oppositeGender)
-    .get()
-    .then((querySnapshot) => {
-      const profiles = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (
-          doc.id !== currentUser.id &&
-          data.school.toLowerCase() === "delhi public school" &&
-          data.age <= 18
-        ) {
-          profiles.push({ id: doc.id, ...data });
-        }
-      });
-
-      currentUser.potentialMatches = profiles;
-      currentIndex = 0;
-      if (profiles.length > 0) {
-        renderCard(profiles[currentIndex]);
-      } else {
-        document.getElementById("card-container").innerHTML = "<p>No profiles available right now.</p>";
-      }
-    });
-}
-
-function renderCard(user) {
-  document.getElementById("card-container").innerHTML = `
-    <h3>${user.name} (${user.age})</h3>
-    <p>${user.description}</p>
-  `;
-}
-
-function swipe(direction) {
-  const profiles = currentUser.potentialMatches;
-  const swipedUser = profiles[currentIndex];
-
-  if (direction === "right") {
-    // Add swiped user to currentUser.likes
-    db.collection("users").doc(currentUser.id).update({
-      likes: firebase.firestore.FieldValue.arrayUnion(swipedUser.id)
-    });
-
-    // Check if the other user liked currentUser
-    db.collection("users").doc(swipedUser.id).get().then((doc) => {
-      const swipedData = doc.data();
-      if (swipedData.likes.includes(currentUser.id)) {
-        // It's a match!
-        db.collection("users").doc(currentUser.id).update({
-          matches: firebase.firestore.FieldValue.arrayUnion(swipedUser.id)
-        });
-        db.collection("users").doc(swipedUser.id).update({
-          matches: firebase.firestore.FieldValue.arrayUnion(currentUser.id)
-        });
-
-        const matchList = document.getElementById("match-list");
-        matchList.innerHTML += `<li>🎉 You matched with ${swipedData.name}!</li>`;
-      }
-    });
-  }
-
-  currentIndex++;
-  if (currentIndex < profiles.length) {
-    renderCard(profiles[currentIndex]);
+function showProfile() {
+  if (currentIndex < potentialMatches.length) {
+    const profile = potentialMatches[currentIndex];
+    profileName.textContent = profile.name;
+    profileBio.textContent = profile.bio;
   } else {
-    document.getElementById("card-container").innerHTML = "<p>No more profiles to swipe.</p>";
+    profileName.textContent = 'No more matches!';
+    profileBio.textContent = '';
+    likeBtn.disabled = true;
+    dislikeBtn.disabled = true;
   }
 }
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true; // for testing only!
-    }
-  }
-}
+
+likeBtn.addEventListener('click', () => {
+  currentIndex++;
+  showProfile();
+});
+
+dislikeBtn.addEventListener('click', () => {
+  currentIndex++;
+  showProfile();
+});
