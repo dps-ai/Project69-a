@@ -1,7 +1,17 @@
 // Firebase config & initialization
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDocs,
+  collection
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDL8FhpPFa0t1-KJOjuNTnofWx3RPa7o5w",
@@ -16,7 +26,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore(app);
 
-// Elements
+// DOM elements
 const registerForm = document.getElementById('registerForm');
 const loginForm = document.getElementById('loginForm');
 const registrationDiv = document.getElementById('registration');
@@ -26,11 +36,25 @@ const profileName = document.getElementById('profileName');
 const profileBio = document.getElementById('profileBio');
 const likeBtn = document.getElementById('like');
 const dislikeBtn = document.getElementById('dislike');
+const goToRegisterBtn = document.getElementById('goToRegister');
+const goToLoginBtn = document.getElementById('goToLogin');
 
 let currentUser = null;
 let potentialMatches = [];
 let currentIndex = 0;
 
+// Toggle between login and register views
+goToRegisterBtn.addEventListener('click', () => {
+  loginDiv.classList.add('hidden');
+  registrationDiv.classList.remove('hidden');
+});
+
+goToLoginBtn.addEventListener('click', () => {
+  registrationDiv.classList.add('hidden');
+  loginDiv.classList.remove('hidden');
+});
+
+// Register
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -66,6 +90,7 @@ registerForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Login
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -75,6 +100,7 @@ loginForm.addEventListener('submit', async (e) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
+
     const snapshot = await getDocs(collection(db, 'students'));
     snapshot.forEach(docSnap => {
       if (docSnap.id === uid) {
@@ -89,6 +115,7 @@ loginForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Load matches
 function loadMatches() {
   getDocs(collection(db, 'students')).then(snapshot => {
     potentialMatches = [];
@@ -107,6 +134,7 @@ function loadMatches() {
   });
 }
 
+// Show profile
 function showProfile() {
   if (currentIndex < potentialMatches.length) {
     const profile = potentialMatches[currentIndex];
@@ -120,6 +148,7 @@ function showProfile() {
   }
 }
 
+// Swipe buttons
 likeBtn.addEventListener('click', () => {
   currentIndex++;
   showProfile();
